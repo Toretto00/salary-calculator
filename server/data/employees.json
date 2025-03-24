@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "fullname": "Phan Chí Bảo",
+    "salary": 9000000,
+    "dependents": 1,
+    "probation": "no",
+    "nationality": "vietnamese",
+    "allowances": {
+      "food": 0,
+      "clothes": 0,
+      "parking": 0,
+      "fuel": 0,
+      "houseRent": 0,
+      "phone": 0
+    },
+    "createdAt": "2025-03-24T04:06:53.720Z"
+  },
+  {
+    "id": 2,
+    "fullname": "Trương Minh Thảo",
+    "salary": 10000000,
+    "dependents": 0,
+    "probation": "no",
+    "nationality": "vietnamese",
+    "allowances": {
+      "food": 0,
+      "clothes": 0,
+      "parking": 0,
+      "fuel": 0,
+      "houseRent": 0,
+      "phone": 0
+    },
+    "createdAt": "2025-03-24T04:11:24.582Z"
+  }
+]
