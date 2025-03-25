@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/data:/app/data
+      - ./server/payslips:/app/payslips
+      - ./server/payslip-template:/app/payslip-template
+    environment:
+      - JWT_SECRET=your-secure-jwt-secret
+      - NODE_ENV=production
