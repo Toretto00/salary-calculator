@@ -2,6 +2,27 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { employeeService } from "../api/api";
 
+// Import our new UI components
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Checkbox } from "../components/ui/checkbox";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "../components/ui/table";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "../components/ui/card";
+
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +35,13 @@ const Employees = () => {
     dependents: 0,
     probation: "no",
     nationality: "vietnamese",
+    idNumber: "",
+    jobTitle: "",
+    email: "",
+    contractStatus: "official",
+    bankName: "",
+    bankAccountName: "",
+    bankAccountNumber: "",
     allowances: {
       food: 0,
       clothes: 0,
@@ -53,6 +81,13 @@ const Employees = () => {
       dependents: 0,
       probation: "no",
       nationality: "vietnamese",
+      idNumber: "",
+      jobTitle: "",
+      email: "",
+      contractStatus: "official",
+      bankName: "",
+      bankAccountName: "",
+      bankAccountNumber: "",
       allowances: {
         food: 0,
         clothes: 0,
@@ -74,6 +109,13 @@ const Employees = () => {
       dependents: employee.dependents,
       probation: employee.probation,
       nationality: employee.nationality,
+      idNumber: employee.idNumber || "",
+      jobTitle: employee.jobTitle || "",
+      email: employee.email || "",
+      contractStatus: employee.contractStatus || "official",
+      bankName: employee.bankName || "",
+      bankAccountName: employee.bankAccountName || "",
+      bankAccountNumber: employee.bankAccountNumber || "",
       allowances: employee.allowances,
     });
     setShowModal(true);
@@ -105,6 +147,8 @@ const Employees = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log(formData);
 
     try {
       if (currentEmployee) {
@@ -138,365 +182,526 @@ const Employees = () => {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Employees Management</h1>
-        <div>
-          <button
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
-            onClick={openAddModal}
-          >
+        <div className="flex space-x-4">
+          <Button variant="default" onClick={openAddModal}>
             Add Employee
-          </button>
-          <Link
-            to="/dashboard"
-            className="ml-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
-          >
-            Back to Dashboard
-          </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/dashboard">Back to Dashboard</Link>
+          </Button>
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-danger mb-4" role="alert">
+        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded mb-4">
           {error}
+          <button className="float-right" onClick={() => setError(null)}>
+            &times;
+          </button>
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-4">Loading employees...</div>
-      ) : (
-        <div className="card">
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Full Name</th>
-                  <th>Gross Salary</th>
-                  <th>Dependents</th>
-                  <th>Status</th>
-                  <th>Nationality</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-4">
-                      No employees found. Add your first employee!
-                    </td>
-                  </tr>
-                ) : (
-                  employees.map((employee) => (
-                    <tr key={employee.id}>
-                      <td>{employee.id}</td>
-                      <td>{employee.fullname}</td>
-                      <td>
-                        {employee.salary ? employee.salary.toLocaleString() : 0}
-                      </td>
-                      <td>{employee.dependents}</td>
-                      <td>
-                        {employee.probation === "yes"
-                          ? "Probation"
-                          : "Official"}
-                      </td>
-                      <td>
-                        {employee.nationality === "vietnamese"
-                          ? "Vietnamese"
-                          : "Other"}
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-edit mr-2"
-                          onClick={() => openEditModal(employee)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-delete"
-                          onClick={() => handleDelete(employee.id)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="flex justify-center py-4">
+          <div className="spinner mr-2"></div> Loading employees...
         </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="rounded border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>ID/Passport</TableHead>
+                    <TableHead>Job Title</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Contract Status</TableHead>
+                    <TableHead>Gross Salary</TableHead>
+                    <TableHead>Dependents</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Nationality</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan="11" className="text-center py-4">
+                        <div className="spinner mr-2"></div> Loading
+                        employees...
+                      </TableCell>
+                    </TableRow>
+                  ) : employees.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="11" className="text-center py-4">
+                        No employees found. Add your first employee!
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    employees.map((employee) => (
+                      <TableRow key={employee.id}>
+                        <TableCell>{employee.id}</TableCell>
+                        <TableCell>{employee.fullname}</TableCell>
+                        <TableCell>{employee.idNumber || "N/A"}</TableCell>
+                        <TableCell>{employee.jobTitle || "N/A"}</TableCell>
+                        <TableCell>{employee.email || "N/A"}</TableCell>
+                        <TableCell>
+                          {employee.contractStatus === "official"
+                            ? "Official"
+                            : "Temporary"}
+                        </TableCell>
+                        <TableCell>
+                          {employee.salary
+                            ? employee.salary.toLocaleString()
+                            : 0}
+                        </TableCell>
+                        <TableCell>{employee.dependents}</TableCell>
+                        <TableCell>
+                          {employee.probation === "yes"
+                            ? "Probation"
+                            : "Regular"}
+                        </TableCell>
+                        <TableCell>
+                          {employee.nationality === "vietnamese"
+                            ? "Vietnamese"
+                            : "Other"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditModal(employee)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(employee.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Employee Modal */}
       {showModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {currentEmployee ? "Edit Employee" : "Add New Employee"}
-              </h2>
-              <button
-                className="modal-close"
-                onClick={() => setShowModal(false)}
-              >
-                &times;
-              </button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label htmlFor="fullname">Full Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="fullname"
-                    name="fullname"
-                    value={formData.fullname}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl mx-auto max-h-[90vh] flex flex-col">
+            <CardHeader className="flex-none">
+              <div className="flex justify-between items-center">
+                <CardTitle>
+                  {currentEmployee ? "Edit Employee" : "Add New Employee"}
+                </CardTitle>
+                <button
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowModal(false)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto">
+              <form onSubmit={handleSubmit} className="h-full flex flex-col">
+                <div className="grid gap-4 flex-1">
+                  {/* Personal Information Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullname">Full Name</Label>
+                        <Input
+                          type="text"
+                          id="fullname"
+                          name="fullname"
+                          value={formData.fullname}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
 
-                <div className="form-group">
-                  <label htmlFor="salary">Gross Salary</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="salary"
-                    name="salary"
-                    value={formData.salary}
-                    onChange={handleChange}
-                    min="0"
-                    required
-                  />
-                </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="idNumber">ID/Passport Number</Label>
+                        <Input
+                          type="text"
+                          id="idNumber"
+                          name="idNumber"
+                          value={formData.idNumber}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
 
-                <div className="form-group">
-                  <label htmlFor="dependents">Number of Dependents</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="dependents"
-                    name="dependents"
-                    value={formData.dependents}
-                    onChange={handleChange}
-                    min="0"
-                  />
-                </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          type="email"
+                          id="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
 
-                <div className="form-group">
-                  <label>Employment Status</label>
-                  <div>
-                    <label className="inline-flex items-center mr-4">
-                      <input
-                        type="radio"
-                        name="probation"
-                        value="yes"
-                        checked={formData.probation === "yes"}
-                        onChange={handleChange}
-                        className="mr-2"
-                      />
-                      Probation (85% salary)
-                    </label>
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        name="probation"
-                        value="no"
-                        checked={formData.probation === "no"}
-                        onChange={handleChange}
-                        className="mr-2"
-                      />
-                      Official (100% salary)
-                    </label>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Nationality</label>
-                  <div>
-                    <label className="inline-flex items-center mr-4">
-                      <input
-                        type="radio"
-                        name="nationality"
-                        value="vietnamese"
-                        checked={formData.nationality === "vietnamese"}
-                        onChange={handleChange}
-                        className="mr-2"
-                      />
-                      Vietnamese
-                    </label>
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        name="nationality"
-                        value="other"
-                        checked={formData.nationality === "other"}
-                        onChange={handleChange}
-                        className="mr-2"
-                      />
-                      Other
-                    </label>
-                  </div>
-                </div>
-
-                {/* Allowances Section */}
-                <div className="mt-4 border-t pt-4">
-                  <h3 className="text-lg font-medium mb-3">
-                    Fixed Monthly Allowances
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="allowances.food">
-                        Food Allowance
-                      </label>
-                      <input
-                        type="number"
-                        id="allowances.food"
-                        name="allowances.food"
-                        className="input"
-                        value={formData.allowances?.food || 0}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "allowances",
-                            "food",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label
-                        className="form-label"
-                        htmlFor="allowances.clothes"
-                      >
-                        Clothes Allowance
-                      </label>
-                      <input
-                        type="number"
-                        id="allowances.clothes"
-                        name="allowances.clothes"
-                        className="input"
-                        value={formData.allowances?.clothes || 0}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "allowances",
-                            "clothes",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label
-                        className="form-label"
-                        htmlFor="allowances.parking"
-                      >
-                        Parking Allowance
-                      </label>
-                      <input
-                        type="number"
-                        id="allowances.parking"
-                        name="allowances.parking"
-                        className="input"
-                        value={formData.allowances?.parking || 0}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "allowances",
-                            "parking",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="allowances.fuel">
-                        Fuel Allowance
-                      </label>
-                      <input
-                        type="number"
-                        id="allowances.fuel"
-                        name="allowances.fuel"
-                        className="input"
-                        value={formData.allowances?.fuel || 0}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "allowances",
-                            "fuel",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label
-                        className="form-label"
-                        htmlFor="allowances.houseRent"
-                      >
-                        House Rent Allowance
-                      </label>
-                      <input
-                        type="number"
-                        id="allowances.houseRent"
-                        name="allowances.houseRent"
-                        className="input"
-                        value={formData.allowances?.houseRent || 0}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "allowances",
-                            "houseRent",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="allowances.phone">
-                        Phone Allowance
-                      </label>
-                      <input
-                        type="number"
-                        id="allowances.phone"
-                        name="allowances.phone"
-                        className="input"
-                        value={formData.allowances?.phone || 0}
-                        onChange={(e) =>
-                          handleNestedChange(
-                            "allowances",
-                            "phone",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="jobTitle">Job Title</Label>
+                        <Input
+                          type="text"
+                          id="jobTitle"
+                          name="jobTitle"
+                          value={formData.jobTitle}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="modal-footer">
-                  <button
+                  {/* Contract & Status Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Contract & Status</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Contract Status</Label>
+                        <div className="flex space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="contract-official"
+                              name="contractStatus"
+                              value="official"
+                              checked={formData.contractStatus === "official"}
+                              onChange={handleChange}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="contract-official">
+                              Official Contract
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="contract-temporary"
+                              name="contractStatus"
+                              value="temporary"
+                              checked={formData.contractStatus === "temporary"}
+                              onChange={handleChange}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="contract-temporary">
+                              Temporary Contract
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Employment Status</Label>
+                        <div className="flex space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="probation-yes"
+                              name="probation"
+                              value="yes"
+                              checked={formData.probation === "yes"}
+                              onChange={handleChange}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="probation-yes">
+                              Probation (85% salary)
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="probation-no"
+                              name="probation"
+                              value="no"
+                              checked={formData.probation === "no"}
+                              onChange={handleChange}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="probation-no">
+                              Regular (100% salary)
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Nationality</Label>
+                        <div className="flex space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="nat-vietnamese"
+                              name="nationality"
+                              value="vietnamese"
+                              checked={formData.nationality === "vietnamese"}
+                              onChange={handleChange}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="nat-vietnamese">Vietnamese</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="nat-other"
+                              name="nationality"
+                              value="other"
+                              checked={formData.nationality === "other"}
+                              onChange={handleChange}
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="nat-other">Other</Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bank Information Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Bank Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bankName">Bank Name</Label>
+                        <Input
+                          type="text"
+                          id="bankName"
+                          name="bankName"
+                          value={formData.bankName}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bankAccountName">
+                          Bank Account Name
+                        </Label>
+                        <Input
+                          type="text"
+                          id="bankAccountName"
+                          name="bankAccountName"
+                          value={formData.bankAccountName}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="bankAccountNumber">
+                          Bank Account Number
+                        </Label>
+                        <Input
+                          type="text"
+                          id="bankAccountNumber"
+                          name="bankAccountNumber"
+                          value={formData.bankAccountNumber}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Salary Information Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Salary Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="salary">Gross Salary</Label>
+                        <Input
+                          type="number"
+                          id="salary"
+                          name="salary"
+                          value={formData.salary}
+                          onChange={handleChange}
+                          min="0"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="dependents">Number of Dependents</Label>
+                        <Input
+                          type="number"
+                          id="dependents"
+                          name="dependents"
+                          value={formData.dependents}
+                          onChange={handleChange}
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Allowances Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">
+                      Fixed Monthly Allowances
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="allowances.food">Food Allowance</Label>
+                        <Input
+                          type="number"
+                          id="allowances.food"
+                          name="allowances.food"
+                          value={formData.allowances?.food || 0}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "allowances",
+                              "food",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="allowances.clothes">
+                          Clothes Allowance
+                        </Label>
+                        <Input
+                          type="number"
+                          id="allowances.clothes"
+                          name="allowances.clothes"
+                          value={formData.allowances?.clothes || 0}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "allowances",
+                              "clothes",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="allowances.parking">
+                          Parking Allowance
+                        </Label>
+                        <Input
+                          type="number"
+                          id="allowances.parking"
+                          name="allowances.parking"
+                          value={formData.allowances?.parking || 0}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "allowances",
+                              "parking",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="allowances.fuel">Fuel Allowance</Label>
+                        <Input
+                          type="number"
+                          id="allowances.fuel"
+                          name="allowances.fuel"
+                          value={formData.allowances?.fuel || 0}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "allowances",
+                              "fuel",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="allowances.houseRent">
+                          House Rent Allowance
+                        </Label>
+                        <Input
+                          type="number"
+                          id="allowances.houseRent"
+                          name="allowances.houseRent"
+                          value={formData.allowances?.houseRent || 0}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "allowances",
+                              "houseRent",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="allowances.phone">
+                          Phone Allowance
+                        </Label>
+                        <Input
+                          type="number"
+                          id="allowances.phone"
+                          name="allowances.phone"
+                          value={formData.allowances?.phone || 0}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "allowances",
+                              "phone",
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2 mt-4 pt-4 border-t">
+                  <Button
                     type="button"
-                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+                    variant="outline"
                     onClick={() => setShowModal(false)}
                   >
                     Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                  >
+                  </Button>
+                  <Button type="submit">
                     {currentEmployee ? "Update" : "Add"} Employee
-                  </button>
+                  </Button>
                 </div>
               </form>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

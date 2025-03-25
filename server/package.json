@@ -14,11 +14,14 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
+    "docxtemplater": "^3.60.2",
     "dotenv": "^16.4.7",
     "exceljs": "^4.4.0",
     "express": "^4.17.1",
     "express-session": "^1.18.1",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "pdf-lib": "^1.17.1",
+    "pizzip": "^3.1.8"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

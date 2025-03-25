@@ -8,8 +8,8 @@ import {
 import { AuthProvider } from "./contexts/AuthContext";
 
 // Components
-import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardLayout from "./components/DashboardLayout";
 
 // Pages
 import Login from "./pages/Login";
@@ -22,29 +22,23 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              {/* Public route */}
-              <Route path="/login" element={<Login />} />
+        <Routes>
+          {/* Public route */}
+          <Route path="/login" element={<Login />} />
 
-              {/* Protected routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/employees" element={<Employees />} />
-                <Route path="/salary" element={<Salary />} />
-                <Route path="/reports" element={<Reports />} />
-              </Route>
+          {/* Protected routes with dashboard layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/employees" element={<Employees />} />
+              <Route path="/salary" element={<Salary />} />
+              <Route path="/reports" element={<Reports />} />
+            </Route>
+          </Route>
 
-              {/* Redirect to login or dashboard based on auth status */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </main>
-          <footer className="bg-gray-100 py-4 text-center text-gray-600">
-            <p>&copy; {new Date().getFullYear()} Salary Calculator App</p>
-          </footer>
-        </div>
+          {/* Redirect to login or dashboard based on auth status */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

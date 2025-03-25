@@ -76,6 +76,13 @@ router.post("/", isAuthenticated, (req, res) => {
       dependents: req.body.dependents || 0,
       probation: req.body.probation || "no",
       nationality: req.body.nationality || "vietnamese",
+      idNumber: req.body.idNumber || "",
+      jobTitle: req.body.jobTitle || "",
+      email: req.body.email || "",
+      contractStatus: req.body.contractStatus || "official",
+      bankName: req.body.bankName || "",
+      bankAccountName: req.body.bankAccountName || "",
+      bankAccountNumber: req.body.bankAccountNumber || "",
       allowances: req.body.allowances || {
         food: 0,
         clothes: 0,
@@ -127,6 +134,17 @@ router.put("/:id", isAuthenticated, (req, res) => {
           : employees[employeeIndex].dependents,
       probation: req.body.probation || employees[employeeIndex].probation,
       nationality: req.body.nationality || employees[employeeIndex].nationality,
+      idNumber: req.body.idNumber || employees[employeeIndex].idNumber,
+      jobTitle: req.body.jobTitle || employees[employeeIndex].jobTitle,
+      email: req.body.email || employees[employeeIndex].email,
+      contractStatus:
+        req.body.contractStatus || employees[employeeIndex].contractStatus,
+      bankName: req.body.bankName || employees[employeeIndex].bankName,
+      bankAccountName:
+        req.body.bankAccountName || employees[employeeIndex].bankAccountName,
+      bankAccountNumber:
+        req.body.bankAccountNumber ||
+        employees[employeeIndex].bankAccountNumber,
       allowances: req.body.allowances ||
         employees[employeeIndex].allowances || {
           food: 0,

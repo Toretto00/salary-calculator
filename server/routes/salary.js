@@ -3,6 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const ExcelJS = require("exceljs");
+const PizZip = require("pizzip");
+const Docxtemplater = require("docxtemplater");
+const { PDFDocument } = require("pdf-lib");
 
 const router = express.Router();
 const salaryCalculationsFile = path.join(
@@ -52,6 +55,30 @@ const TAX_LEVELS = [
   { number: 7, from: 80000000, percent: 35, title: "From 80m (35%)" },
 ];
 
+// Calculate working days in a month (Monday to Friday)
+function getWorkingDaysInMonth(month, year) {
+  // Create date for the first day of the month
+  const startDate = new Date(year, month - 1, 1);
+  // Create date for the first day of next month
+  const endDate = new Date(year, month, 0);
+
+  let workingDays = 0;
+
+  // Loop through all days in the month
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    // Check if the day is a weekday (1-5 = Monday to Friday)
+    const dayOfWeek = currentDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      workingDays++;
+    }
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return workingDays;
+}
+
 const MAX_SALARY_FOR_SOCIAL_INSURANCE = 2340000 * 20;
 const MAX_SALARY_FOR_HEALTH_INSURANCE = 2340000 * 20;
 const MAX_SALARY_FOR_ACCIDENT_INSURANCE = 4960000 * 20;
@@ -94,6 +121,7 @@ function calculateSalary(inputData = {}) {
   const phone = inputData.allowances?.phone || inputData.phone || 0;
   const otTimeSoon = inputData.otTimeSoon || 0;
   const otTimeLate = inputData.otTimeLate || 0;
+  const bonus = inputData.bonus || 0;
   const isProbation = inputData.probation === "yes";
   const isVietnamese = inputData.nationality === "vietnamese";
   const fullname = inputData.fullname || "Employee";
@@ -131,7 +159,7 @@ function calculateSalary(inputData = {}) {
       ? (effectiveGrossSalary / workingDays) * (workingDays - daysOff)
       : 0;
 
-  const taxableIncome =
+  let taxableIncome =
     adjustedSalary -
     healthInsurance -
     socialInsurance -
@@ -145,7 +173,10 @@ function calculateSalary(inputData = {}) {
     (food > 730000 ? food - 730000 : 0) +
     (clothes > 5000000 / 12 ? clothes - 5000000 / 12 : 0) +
     (otTimeSoon > 0 ? otTimeSoon * grossSalaryPerHour : 0) +
-    (otTimeLate > 0 ? otTimeLate * grossSalaryPerHour : 0);
+    (otTimeLate > 0 ? otTimeLate * grossSalaryPerHour : 0) +
+    bonus;
+
+  taxableIncome = taxableIncome < 0 ? 0 : taxableIncome;
 
   let totalTax = 0;
   TAX_LEVELS.forEach((taxLevel) => {
@@ -179,7 +210,8 @@ function calculateSalary(inputData = {}) {
     fuel +
     houseRent +
     phone +
-    totalOvertime;
+    totalOvertime +
+    bonus;
 
   return {
     fullname,
@@ -197,6 +229,7 @@ function calculateSalary(inputData = {}) {
     fuel,
     houseRent,
     phone,
+    bonus,
     totalBenefits,
     healthInsurance,
     socialInsurance,
@@ -566,16 +599,29 @@ router.get("/export/excel", isAuthenticated, async (req, res) => {
 // Calculate and create new salary records (batch processing)
 router.post("/calculate", isAuthenticated, (req, res) => {
   try {
-    const { employeeIds, month, year, workingDays, daysOff, overtime, bonus } =
-      req.body;
+    const {
+      employeeIds,
+      month,
+      year,
+      daysOff,
+      overtimesoon,
+      overtimelate,
+      bonus,
+    } = req.body;
 
     // Basic validation
-    if (!employeeIds || !month || !year || workingDays === undefined) {
+    if (!employeeIds || !month || !year) {
       return res.status(400).json({
-        message:
-          "Missing required fields: employeeIds, month, year, workingDays",
+        message: "Missing required fields: employeeIds, month, year",
       });
     }
+
+    // Convert month and year to integers for consistency
+    const monthInt = parseInt(month);
+    const yearInt = parseInt(year);
+
+    // Auto-calculate working days for the month
+    const workingDays = getWorkingDaysInMonth(monthInt, yearInt);
 
     // Get employees data
     let employees = [];
@@ -610,8 +656,8 @@ router.post("/calculate", isAuthenticated, (req, res) => {
         const existingRecord = calculations.find(
           (calc) =>
             calc.employeeId === employee.id &&
-            calc.month === parseInt(month) &&
-            calc.year === parseInt(year)
+            calc.month === monthInt &&
+            calc.year === yearInt
         );
 
         if (existingRecord) {
@@ -633,8 +679,8 @@ router.post("/calculate", isAuthenticated, (req, res) => {
           nationality: employee.nationality || "vietnamese",
           workingDays,
           daysOff: daysOff || 0,
-          otTimeSoon: overtime || 0,
-          otTimeLate: 0,
+          otTimeSoon: overtimesoon || 0,
+          otTimeLate: overtimelate || 0,
           bonus: bonus || 0,
         };
 
@@ -648,8 +694,8 @@ router.post("/calculate", isAuthenticated, (req, res) => {
               ? Math.max(...calculations.map((c) => c.id)) + 1
               : 1,
           employeeId: employee.id,
-          month: parseInt(month),
-          year: parseInt(year),
+          month: monthInt,
+          year: yearInt,
           ...result,
         };
 
@@ -669,14 +715,234 @@ router.post("/calculate", isAuthenticated, (req, res) => {
 
     res.status(201).json({
       success: results.length > 0,
-      message: `Successfully calculated ${results.length} salary records`,
+      message: `Successfully calculated ${results.length} salary records for ${monthInt}/${yearInt} with ${workingDays} working days`,
       results,
       errors: errors.length > 0 ? errors : undefined,
+      workingDays,
     });
   } catch (error) {
     console.error("Error calculating salaries:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
+// Generate payslip
+router.get("/:id/payslip", async (req, res) => {
+  try {
+    const salaryId = req.params.id;
+    const salary = await getSalaryById(salaryId);
+    const employee = await getEmployeeById(salary.employeeId);
+
+    if (!salary || !employee) {
+      return res.status(404).json({ message: "Salary or employee not found" });
+    }
+
+    // Read the template file
+    const templatePath = path.join(
+      __dirname,
+      "../payslip-template/Acamar AI Vietnam - Payslip.pdf"
+    );
+
+    // Check if template exists
+    if (!fs.existsSync(templatePath)) {
+      throw new Error("PDF template file not found");
+    }
+
+    // Read the PDF template
+    const pdfBytes = fs.readFileSync(templatePath);
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+
+    // Get the first page
+    const page = pdfDoc.getPages()[0];
+
+    // Format currency values
+    const formatCurrency = (value) => {
+      return value.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
+    };
+
+    // Calculate total benefits
+    const totalBenefits = salary.totalBenefits;
+
+    // Set text size and spacing
+    const fontSize = 8;
+    const lineHeight = fontSize * 1.2;
+
+    // Helper function to draw text with right alignment
+    const drawText = (text, x, y, size = fontSize, isRightAligned = false) => {
+      if (!text) return;
+
+      // Convert Vietnamese characters to their ASCII equivalents
+      const asciiText = text
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đĐ]/g, "d")
+        .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, "a")
+        .replace(/[èéẹẻẽêềếệểễ]/g, "e")
+        .replace(/[ìíịỉĩ]/g, "i")
+        .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, "o")
+        .replace(/[ùúụủũưừứựửữ]/g, "u")
+        .replace(/[ỳýỵỷỹ]/g, "y");
+
+      // Calculate text width (approximate)
+      const textWidth = asciiText.length * size * 0.6; // Approximate width based on font size
+
+      // Adjust x position for right alignment
+      const finalX = isRightAligned ? x - textWidth : x;
+
+      page.drawText(asciiText, {
+        x: finalX,
+        y,
+        size,
+      });
+    };
+
+    // Draw employee information (left aligned)
+    drawText(employee.fullname || "", 170, 720);
+    drawText(employee.id.toString() || "", 170, 702);
+    drawText(`${months[salary.month - 1]} ${salary.year}`, 170, 684);
+    drawText(formatCurrency(salary.grossSalary || 0), 170, 666);
+    drawText(formatCurrency(salary.grossSalary || 0), 170, 648);
+
+    drawText(employee.idNumber || "", 430, 720);
+    drawText(employee.jobTitle || "", 430, 702);
+    drawText(employee.email || "", 430, 684);
+    drawText(
+      employee.contractStatus === "official"
+        ? "Official Contract"
+        : "Temporary Contract",
+      430,
+      666
+    );
+    drawText(employee.dependents.toString() || "0", 430, 648);
+
+    // Draw salary details (right aligned)
+    drawText(formatCurrency(salary.grossSalary || 0), 420, 580, fontSize, true);
+    drawText(formatCurrency(totalBenefits), 412, 564, fontSize, true);
+    drawText(salary.workDays?.toString() || "0", 414, 546, fontSize, true);
+    drawText(formatCurrency(salary.bonus || 0), 412, 534, fontSize, true);
+    drawText(
+      formatCurrency(salary.taxableIncome || 0),
+      412,
+      520,
+      fontSize,
+      true
+    );
+    drawText(
+      formatCurrency(salary.adjustedSalary + salary.bonus + totalBenefits || 0),
+      420,
+      482,
+      10,
+      true
+    );
+
+    // Draw deductions (right aligned)
+    drawText(
+      formatCurrency(salary.socialInsurance || 0),
+      560,
+      446,
+      fontSize,
+      true
+    );
+    drawText(
+      formatCurrency(salary.healthInsurance || 0),
+      560,
+      430,
+      fontSize,
+      true
+    );
+    drawText(
+      formatCurrency(salary.accidentInsurance || 0),
+      560,
+      414,
+      fontSize,
+      true
+    );
+    drawText(formatCurrency(salary.totalTax || 0), 556, 396, fontSize, true);
+    drawText("0", 556, 378, fontSize, true);
+    drawText(
+      formatCurrency(salary.totalInsurance + salary.totalTax || 0),
+      560,
+      358,
+      fontSize,
+      true
+    );
+
+    // Draw net salary (right aligned)
+    drawText(formatCurrency(salary.netSalary || 0), 450, 324, fontSize, true);
+
+    // Draw bank details (left aligned)
+    drawText(employee.bankName || "", 170, 324);
+    drawText(employee.bankAccountName || "", 170, 306);
+    drawText(employee.bankAccountNumber || "", 170, 288);
+
+    // Save the modified PDF
+    const modifiedPdfBytes = await pdfDoc.save();
+
+    // Create a safe filename
+    const safeFilename = `payslip_${salary.employeeId}_${salary.month}_${salary.year}.pdf`;
+
+    // Set response headers
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${safeFilename}"`
+    );
+    res.setHeader("Content-Length", modifiedPdfBytes.length);
+
+    // Send the PDF directly to the user
+    res.send(Buffer.from(modifiedPdfBytes));
+  } catch (error) {
+    console.error("Error generating payslip:", error);
+    res.status(500).json({
+      message: "Error generating payslip",
+      error: error.message,
+    });
+  }
+});
+
+// Helper function to get salary by ID
+const getSalaryById = async (id) => {
+  try {
+    const salaries = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../data/salary_calculations.json"),
+        "utf8"
+      )
+    );
+    return salaries.find((s) => s.id === parseInt(id));
+  } catch (error) {
+    console.error("Error getting salary:", error);
+    return null;
+  }
+};
+
+// Helper function to get employee by ID
+const getEmployeeById = async (id) => {
+  try {
+    const employees = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "../data/employees.json"), "utf8")
+    );
+    return employees.find((e) => e.id === parseInt(id));
+  } catch (error) {
+    console.error("Error getting employee:", error);
+    return null;
+  }
+};
+
+// Months array for payment cycle
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 module.exports = router;

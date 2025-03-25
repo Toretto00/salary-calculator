@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Calculator } from "lucide-react";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -35,56 +47,59 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Salary Calculator Login
-      </h2>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-2">
+            <Calculator className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">
+            Salary Calculator Login
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your credentials to access the dashboard
+          </CardDescription>
+        </CardHeader>
 
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      )}
+        <CardContent>
+          {error && (
+            <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="username" className="block mb-2">
-            Username
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={isLoading}
-          />
-        </div>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
 
-        <div className="form-group">
-          <label htmlFor="password" className="block mb-2">
-            Password
-          </label>
-          <input
-            type="password"
-            className="form-control"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-          />
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
 
-        <div className="form-group">
-          <button type="submit" className="btn-primary" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
-        </div>
-
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>Default credentials: admin / admin123</p>
-        </div>
-      </form>
+            <Button className="w-full mt-6" type="submit" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

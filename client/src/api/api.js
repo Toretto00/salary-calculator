@@ -184,10 +184,18 @@ export const salaryService = {
     }
   },
 
-  // Calculate salary for selected employees
-  calculate: async (calculationData) => {
+  // Calculate salary for one or more employees
+  calculate: async (data) => {
     try {
-      const response = await api.post("/salary/calculate", calculationData);
+      const response = await api.post("/salary/calculate", {
+        employeeIds: data.employeeIds,
+        month: data.month,
+        year: data.year,
+        daysOff: data.daysOff || 0,
+        overtimesoon: data.overtimesoon || 0,
+        overtimelate: data.overtimelate || 0,
+        bonus: data.bonus || 0,
+      });
       return response.data;
     } catch (error) {
       console.error("Error calculating salary:", error);
@@ -240,6 +248,22 @@ export const salaryService = {
       return true;
     } catch (error) {
       console.error("Error exporting to Excel:", error);
+      throw error;
+    }
+  },
+
+  // Export payslip as PDF
+  exportPayslip: async (salaryId) => {
+    try {
+      const response = await api.get(`/salary/${salaryId}/payslip`, {
+        responseType: "blob",
+        headers: {
+          Accept: "application/pdf",
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error("Error exporting payslip:", error);
       throw error;
     }
   },
