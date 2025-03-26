@@ -16,16 +16,24 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:18-alpine
 
-# Copy built assets from build stage
-COPY --from=build /app/build /usr/share/nginx/html
+WORKDIR /app
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy package files
+COPY package*.json ./
 
-# Expose port 80
-EXPOSE 80
+# Install dependencies
+RUN npm install
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+# Copy source code
+COPY . .
+
+# Expose port 3000
+EXPOSE 3000
+
+# Set host to 0.0.0.0 to allow external connections
+ENV HOST=0.0.0.0
+
+# Start development server
+CMD ["npm", "start"] 

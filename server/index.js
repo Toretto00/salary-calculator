@@ -11,15 +11,31 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "salary-calculator-secret-key";
 
+// CORS configuration
+const corsOptions = {
+  origin: [
+    "http://192.168.31.103",
+    "http://192.168.31.103:80",
+    "http://192.168.31.103:3000",
+    "http://localhost:3000",
+    "http://localhost:80",
+    "http://localhost",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+// Apply CORS middleware with options
+app.use(cors(corsOptions));
+
 // Middleware
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
 app.use(express.json());
 app.use(
   session({
@@ -29,6 +45,8 @@ app.use(
     cookie: {
       maxAge: 3600000, // 1 hour
       httpOnly: true,
+      secure: false, // Set to true if using HTTPS
+      sameSite: "lax",
     },
   })
 );

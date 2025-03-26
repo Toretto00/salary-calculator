@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 // Create axios instance with default config
 const api = axios.create({
@@ -15,6 +15,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    console.log("Request interceptor - Token:", token ? "Present" : "Missing");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,11 +28,30 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid, redirect to login
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+    if (error.response) {
+      console.log("Response interceptor - Status:", error.response.status);
+      console.log("Response interceptor - Data:", error.response.data);
+      switch (error.response.status) {
+        case 401:
+          console.log("Token expired or invalid - Clearing storage");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("tokenExpiration");
+          window.location.href = "/login";
+          break;
+        case 403:
+          // Forbidden
+          console.error("Access forbidden:", error.response.data);
+          break;
+        default:
+          console.error("API Error:", error.response.data);
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error("No response received:", error.request);
+    } else {
+      // Something else happened
+      console.error("Error:", error.message);
     }
     return Promise.reject(error);
   }
@@ -40,48 +60,77 @@ api.interceptors.response.use(
 // Auth services
 export const authService = {
   login: async (username, password) => {
-    const response = await api.post("/auth/login", { username, password });
-    if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      // Set token expiration (1 hour)
-      const expirationTime = new Date().getTime() + 60 * 60 * 1000;
-      localStorage.setItem("tokenExpiration", expirationTime);
+    try {
+      const response = await api.post("/auth/login", { username, password });
+      console.log("Login response:", response.data);
+      if (response.data.token) {
+        console.log("Storing token and user data");
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        // Set token expiration (1 hour)
+        const expirationTime = new Date().getTime() + 60 * 60 * 1000;
+        localStorage.setItem("tokenExpiration", expirationTime);
+        console.log("Token expiration set to:", new Date(expirationTime));
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
-    return response.data;
   },
 
   logout: async () => {
-    await api.post("/auth/logout");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("tokenExpiration");
+    try {
+      console.log("Logging out - Clearing storage");
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tokenExpiration");
+    }
   },
 
   checkAuth: async () => {
     try {
+      console.log("Checking auth status");
       const response = await api.get("/auth/check");
+      console.log("Auth check response:", response.data);
       return response.data;
     } catch (error) {
+      console.error("Auth check error:", error);
       throw error;
     }
   },
 
   getUser: () => {
     const user = localStorage.getItem("user");
+    console.log("Getting user from storage:", user ? "Present" : "Missing");
     return user ? JSON.parse(user) : null;
   },
 
   isAuthenticated: () => {
     const token = localStorage.getItem("token");
     const expiration = localStorage.getItem("tokenExpiration");
+    console.log(
+      "Checking authentication - Token:",
+      token ? "Present" : "Missing"
+    );
+    console.log(
+      "Token expiration:",
+      expiration ? new Date(parseInt(expiration)) : "Missing"
+    );
 
     if (!token || !expiration) {
+      console.log("Not authenticated - Missing token or expiration");
       return false;
     }
 
     // Check if token is expired
-    return new Date().getTime() < parseInt(expiration, 10);
+    const isValid = new Date().getTime() < parseInt(expiration, 10);
+    console.log("Token validity:", isValid ? "Valid" : "Expired");
+    return isValid;
   },
 };
 

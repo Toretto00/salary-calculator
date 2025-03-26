@@ -151,7 +151,7 @@ const Employees = () => {
       // Remove all non-digit characters
       const numericValue = value.toString().replace(/\D/g, "");
       // Format the number
-      const formattedValue = formatCurrency(numericValue);
+      const formattedValue = formatter.format(parseFloat(numericValue));
       setFormData((prev) => ({
         ...prev,
         [parent]: {

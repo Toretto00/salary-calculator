@@ -621,7 +621,7 @@ const Salary = () => {
                     <TableHead>Taxable Income</TableHead>
                     <TableHead>Social Insurance</TableHead>
                     <TableHead>Health Insurance</TableHead>
-                    <TableHead>Accident Insurance</TableHead>
+                    <TableHead>Unemployment Insurance</TableHead>
                     <TableHead>Total Tax</TableHead>
                     <TableHead>Net Salary</TableHead>
                     <TableHead>Actions</TableHead>
