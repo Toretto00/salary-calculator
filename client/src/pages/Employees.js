@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { employeeService } from "../api/api";
+import { formatCurrency, parseCurrency, formatter } from "../utils/format";
 
 // Import our new UI components
 import { Button } from "../components/ui/button";
@@ -20,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
 } from "../components/ui/card";
 
 const Employees = () => {
@@ -124,39 +124,75 @@ const Employees = () => {
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        name === "dependents" || name === "salary"
-          ? parseInt(value) || 0
-          : value,
-    }));
+
+    // Handle currency inputs
+    if (name === "salary") {
+      // Remove all non-digit characters
+      const numericValue = value.replace(/\D/g, "");
+      // Format the number
+      const formattedValue = formatter.format(parseFloat(numericValue));
+      console.log(formattedValue);
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   // Handle nested changes for allowances
   const handleNestedChange = (parent, field, value) => {
-    setFormData({
-      ...formData,
-      [parent]: {
-        ...formData[parent],
-        [field]: value,
-      },
-    });
+    // Handle currency inputs for allowances
+    if (parent === "allowances") {
+      // Remove all non-digit characters
+      const numericValue = value.toString().replace(/\D/g, "");
+      // Format the number
+      const formattedValue = formatCurrency(numericValue);
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [field]: formattedValue,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [field]: value,
+        },
+      }));
+    }
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log(formData);
-
     try {
+      const formattedData = {
+        ...formData,
+        salary: parseCurrency(formData.salary),
+        allowances: {
+          food: parseCurrency(formData.allowances?.food || "0"),
+          clothes: parseCurrency(formData.allowances?.clothes || "0"),
+          parking: parseCurrency(formData.allowances?.parking || "0"),
+          fuel: parseCurrency(formData.allowances?.fuel || "0"),
+          houseRent: parseCurrency(formData.allowances?.houseRent || "0"),
+          phone: parseCurrency(formData.allowances?.phone || "0"),
+        },
+      };
+
       if (currentEmployee) {
         // Update existing employee
-        await employeeService.update(currentEmployee.id, formData);
+        await employeeService.update(currentEmployee.id, formattedData);
       } else {
         // Create new employee
-        await employeeService.create(formData);
+        await employeeService.create(formattedData);
       }
 
       // Refresh employee list
@@ -545,12 +581,11 @@ const Employees = () => {
                       <div className="space-y-2">
                         <Label htmlFor="salary">Gross Salary</Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="salary"
                           name="salary"
                           value={formData.salary}
                           onChange={handleChange}
-                          min="0"
                           required
                         />
                       </div>
@@ -578,15 +613,15 @@ const Employees = () => {
                       <div className="space-y-2">
                         <Label htmlFor="allowances.food">Food Allowance</Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="allowances.food"
                           name="allowances.food"
-                          value={formData.allowances?.food || 0}
+                          value={formData.allowances?.food || ""}
                           onChange={(e) =>
                             handleNestedChange(
                               "allowances",
                               "food",
-                              parseFloat(e.target.value) || 0
+                              e.target.value
                             )
                           }
                         />
@@ -597,15 +632,15 @@ const Employees = () => {
                           Clothes Allowance
                         </Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="allowances.clothes"
                           name="allowances.clothes"
-                          value={formData.allowances?.clothes || 0}
+                          value={formData.allowances?.clothes || ""}
                           onChange={(e) =>
                             handleNestedChange(
                               "allowances",
                               "clothes",
-                              parseFloat(e.target.value) || 0
+                              e.target.value
                             )
                           }
                         />
@@ -616,15 +651,15 @@ const Employees = () => {
                           Parking Allowance
                         </Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="allowances.parking"
                           name="allowances.parking"
-                          value={formData.allowances?.parking || 0}
+                          value={formData.allowances?.parking || ""}
                           onChange={(e) =>
                             handleNestedChange(
                               "allowances",
                               "parking",
-                              parseFloat(e.target.value) || 0
+                              e.target.value
                             )
                           }
                         />
@@ -633,15 +668,15 @@ const Employees = () => {
                       <div className="space-y-2">
                         <Label htmlFor="allowances.fuel">Fuel Allowance</Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="allowances.fuel"
                           name="allowances.fuel"
-                          value={formData.allowances?.fuel || 0}
+                          value={formData.allowances?.fuel || ""}
                           onChange={(e) =>
                             handleNestedChange(
                               "allowances",
                               "fuel",
-                              parseFloat(e.target.value) || 0
+                              e.target.value
                             )
                           }
                         />
@@ -652,15 +687,15 @@ const Employees = () => {
                           House Rent Allowance
                         </Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="allowances.houseRent"
                           name="allowances.houseRent"
-                          value={formData.allowances?.houseRent || 0}
+                          value={formData.allowances?.houseRent || ""}
                           onChange={(e) =>
                             handleNestedChange(
                               "allowances",
                               "houseRent",
-                              parseFloat(e.target.value) || 0
+                              e.target.value
                             )
                           }
                         />
@@ -671,15 +706,15 @@ const Employees = () => {
                           Phone Allowance
                         </Label>
                         <Input
-                          type="number"
+                          type="text"
                           id="allowances.phone"
                           name="allowances.phone"
-                          value={formData.allowances?.phone || 0}
+                          value={formData.allowances?.phone || ""}
                           onChange={(e) =>
                             handleNestedChange(
                               "allowances",
                               "phone",
-                              parseFloat(e.target.value) || 0
+                              e.target.value
                             )
                           }
                         />

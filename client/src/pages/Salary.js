@@ -3,6 +3,7 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import * as ExcelJS from "exceljs";
 import { employeeService, salaryService } from "../api/api";
+import { formatCurrency } from "../utils/format";
 
 // Import our new UI components
 import { Button } from "../components/ui/button";
@@ -25,7 +26,7 @@ import {
   CardContent,
   CardFooter,
 } from "../components/ui/card";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 
 const Salary = () => {
   const { token } = useAuth();
@@ -431,6 +432,18 @@ const Salary = () => {
   const thisYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => thisYear - 3 + i);
 
+  const handleDeleteEmployee = async (employeeId) => {
+    try {
+      await employeeService.deleteEmployee(employeeId);
+      setSuccessMessage("Employee deleted successfully!");
+      // Refresh the employees list
+      fetchEmployees();
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      setError("Failed to delete employee. Please try again.");
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Salary Management</h1>
@@ -619,37 +632,47 @@ const Salary = () => {
                     <TableRow key={salary.id}>
                       <TableCell>{salary.fullname}</TableCell>
                       <TableCell>
-                        {salary.grossSalary.toLocaleString()}
+                        {formatCurrency(salary.grossSalary)}
                       </TableCell>
                       <TableCell>
-                        {salary.totalBenefits.toLocaleString()}
+                        {formatCurrency(salary.totalBenefits)}
                       </TableCell>
                       <TableCell>{salary.workDays}</TableCell>
-                      <TableCell>{salary.bonus.toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(salary.bonus)}</TableCell>
                       <TableCell>
-                        {salary.taxableIncome.toLocaleString()}
+                        {formatCurrency(salary.taxableIncome)}
                       </TableCell>
                       <TableCell>
-                        {salary.socialInsurance.toLocaleString()}
+                        {formatCurrency(salary.socialInsurance)}
                       </TableCell>
                       <TableCell>
-                        {salary.healthInsurance.toLocaleString()}
+                        {formatCurrency(salary.healthInsurance)}
                       </TableCell>
                       <TableCell>
-                        {salary.accidentInsurance.toLocaleString()}
+                        {formatCurrency(salary.accidentInsurance)}
                       </TableCell>
-                      <TableCell>{salary.totalTax.toLocaleString()}</TableCell>
-                      <TableCell>{salary.netSalary.toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(salary.totalTax)}</TableCell>
+                      <TableCell>{formatCurrency(salary.netSalary)}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleExportPayslip(salary)}
-                          disabled={loading}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Export
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExportPayslip(salary)}
+                            disabled={loading}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteSalary(salary.id)}
+                            disabled={loading}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
