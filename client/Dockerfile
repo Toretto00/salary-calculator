@@ -7,33 +7,27 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+ENV NODE_OPTIONS="--max-old-space-size=512"
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Build the app
+ENV NODE_ENV=production
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy built assets from build stage
+COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy package files
-COPY package*.json ./
+# Copy nginx config for the container
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Install dependencies
-RUN npm install
+# Expose port
+EXPOSE 80
 
-# Copy source code
-COPY . .
-
-# Expose port 3000
-EXPOSE 3000
-
-# Set host to 0.0.0.0 to allow external connections
-ENV HOST=0.0.0.0
-
-# Start development server
-CMD ["npm", "start"] 
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 

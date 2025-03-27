@@ -5,30 +5,71 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      # - REACT_APP_API_URL=http://18.142.219.52:5000/api
-      - NODE_ENV=production
+    container_name: salary-frontend
     restart: always
+    networks:
+      - app-network
+    # Memory limits to prevent heap issues
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   backend:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
+    container_name: salary-backend
     environment:
       - PORT=5000
       - HOST=0.0.0.0
       - NODE_ENV=production
       - MONGODB_URI=mongodb://localhost:27017/salary-calculator
-      - CORS_ORIGIN=http://18.142.219.52:3000,http://18.142.219.52,http://localhost:3000,http://localhost
+      - CORS_ORIGIN=https://toretto.id.vn
     volumes:
       - ./server/payslips:/app/payslips
       - ./server/payslip-template:/app/payslip-template
     restart: always
+    networks:
+      - app-network
+    # Memory limits to prevent heap issues
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  nginx:
+    image: nginx:alpine
+    container_name: salary-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+    networks:
+      - app-network
+    # Memory limits to prevent heap issues
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # Optional service for SSL certificate management
+  certbot:
+    image: certbot/certbot
+    container_name: salary-certbot
+    volumes:
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
 
 networks:
-  default:
+  app-network:
     driver: bridge
