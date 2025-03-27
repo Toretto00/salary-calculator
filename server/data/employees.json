@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": 1,
+    "fullname": "Trương Minh Thảo",
+    "salary": 20000000,
+    "dependents": "1",
+    "probation": "no",
+    "nationality": "vietnamese",
+    "idNumber": "077302005721",
+    "jobTitle": "HR Manager",
+    "email": "truongminhthao132@gmail.com",
+    "contractStatus": "official",
+    "bankName": "Agribank",
+    "bankAccountName": "Trương Minh Thảo",
+    "bankAccountNumber": "84738147384",
+    "allowances": {
+      "food": 2000000,
+      "clothes": 0,
+      "parking": 0,
+      "fuel": 0,
+      "houseRent": 0,
+      "phone": 0
+    },
+    "createdAt": "2025-03-26T08:30:27.516Z"
+  }
+]

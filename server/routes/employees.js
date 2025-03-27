@@ -13,13 +13,16 @@ const isAuthenticated = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
+  console.log(token);
 
   try {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || "salary-calculator-jwt-secret"
     );
+    console.log(decoded);
     req.user = decoded;
+    console.log(req.user);
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid token" });

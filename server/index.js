@@ -14,6 +14,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "salary-calculator-secret-key";
 // CORS configuration
 const corsOptions = {
   origin: [
+    "http://18.142.219.52:3000",
+    "http://18.142.219.52",
     "http://192.168.31.103",
     "http://192.168.31.103:80",
     "http://192.168.31.103:3000",

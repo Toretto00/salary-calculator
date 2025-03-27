@@ -65,6 +65,7 @@ const Employees = () => {
       setEmployees(data);
       setError("");
     } catch (error) {
+      alert(error);
       console.error("Error fetching employees:", error);
       setError("Failed to load employees. Please try again.");
     } finally {
