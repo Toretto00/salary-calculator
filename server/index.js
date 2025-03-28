@@ -100,11 +100,18 @@ if (!fs.existsSync(usersFile)) {
   fs.writeFileSync(usersFile, JSON.stringify(defaultUsers, null, 2));
 }
 
+// Ensure attendance.json exists
+const attendanceFile = path.join(dataDir, "attendance.json");
+if (!fs.existsSync(attendanceFile)) {
+  fs.writeFileSync(attendanceFile, JSON.stringify([], null, 2));
+}
+
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/employees", authenticateToken, require("./routes/employees"));
 app.use("/api/salary", authenticateToken, require("./routes/salary"));
 app.use("/api/reports", authenticateToken, require("./routes/reports"));
+app.use("/api/attendance", authenticateToken, require("./routes/attendance"));
 
 // Status route
 app.get("/api/status", (req, res) => {

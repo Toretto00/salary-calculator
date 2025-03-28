@@ -1,32 +1,65 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
-import * as ExcelJS from "exceljs";
-import { employeeService, salaryService } from "../api/api";
+import { salaryService, employeeService } from "../api/api";
 import { formatCurrency } from "../utils/format";
-
-// Import our new UI components
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 import { Button } from "../components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectOption,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { toast } from "../utils/toast";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Checkbox } from "../components/ui/checkbox";
-import { Select, SelectOption } from "../components/ui/select";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "../components/ui/table";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "../components/ui/card";
 import { Download, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
+
+// Custom tag component
+const Tag = ({ severity, value, className = "" }) => {
+  const colorMap = {
+    info: "bg-blue-100 text-blue-800",
+    success: "bg-green-100 text-green-800",
+    warning: "bg-yellow-100 text-yellow-800",
+    error: "bg-red-100 text-red-800",
+  };
+
+  return (
+    <span
+      className={`${
+        colorMap[severity] || colorMap.info
+      } text-xs px-2 py-1 rounded ${className}`}
+    >
+      {value}
+    </span>
+  );
+};
 
 const Salary = () => {
   const { token } = useAuth();
@@ -38,11 +71,7 @@ const Salary = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Multiple employee selection for batch calculation
   const [selectedEmployees, setSelectedEmployees] = useState([]);
-
-  // Common form state for all selected employees
   const [calculationForm, setCalculationForm] = useState({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -52,12 +81,14 @@ const Salary = () => {
     bonus: 0,
     isProbation: false,
   });
-
-  // To display the calculated working days
   const [calculatedWorkingDays, setCalculatedWorkingDays] = useState(null);
-
-  // State to track which employees already have salaries for the current period
   const [employeesWithSalaries, setEmployeesWithSalaries] = useState([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmDialogProps, setConfirmDialogProps] = useState({
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
   // Update calculation form when current month/year changes
   useEffect(() => {
@@ -220,15 +251,29 @@ const Salary = () => {
     setLoading(false);
 
     if (employeesWithExistingSalaries.length > 0) {
-      setError(
-        `The following employees already have salary calculations for ${
-          months.find((m) => m.value === parseInt(updatedForm.month))?.label
-        } ${updatedForm.year}: ${employeesWithExistingSalaries.join(", ")}`
+      // Ask for confirmation to overwrite using AlertDialog
+      setConfirmDialogProps({
+        title: "Confirm Overwrite",
+        message: `The following employees already have salary calculations for ${
+          months.find((m) => m.value === updatedForm.month)?.label
+        } ${updatedForm.year}:\n\n${employeesWithExistingSalaries.join(
+          "\n"
+        )}\n\nDo you want to overwrite them?`,
+        onConfirm: () => {
+          setShowModal(true);
+          toast.info(
+            "Attendance data will be used to determine working days and days off automatically (≥7 hours = full day, 4-7 hours = half day)"
+          );
+        },
+      });
+      setShowConfirmDialog(true);
+    } else {
+      // No existing salaries, show calculation modal directly
+      setShowModal(true);
+      toast.info(
+        "Attendance data will be used to determine working days and days off automatically (≥7 hours = full day, 4-7 hours = half day)"
       );
-      return;
     }
-
-    setShowModal(true);
   };
 
   // Handle form input changes
@@ -256,7 +301,6 @@ const Salary = () => {
         employeeIds: selectedEmployees,
         month: calculationForm.month,
         year: calculationForm.year,
-        daysOff: calculationForm.daysOff,
         overtimesoon: calculationForm.overtimesoon,
         overtimelate: calculationForm.overtimelate,
         bonus: calculationForm.bonus,
@@ -264,13 +308,54 @@ const Salary = () => {
 
       const response = await salaryService.calculate(calculationData);
 
-      // Store the calculated working days for display
-      if (response.workingDays) {
-        setCalculatedWorkingDays(response.workingDays);
-      }
+      console.log("Salary calculation response:", response);
 
-      // Check for success or errors
-      if (response.success) {
+      // Check if response has expected properties
+      if (response && Array.isArray(response)) {
+        // Get the first result as a reference
+        const firstResult = response[0];
+
+        // Check for attendance summary
+        if (firstResult && firstResult.attendanceSummary) {
+          console.log(
+            "Attendance summary found:",
+            firstResult.attendanceSummary
+          );
+
+          // Set days off based on absences from attendance
+          const daysOff = firstResult.attendanceSummary.absences || 0;
+          console.log("Setting days off to:", daysOff);
+
+          setCalculationForm((prev) => ({
+            ...prev,
+            daysOff: daysOff,
+          }));
+
+          // Also set working days if available
+          if (firstResult.attendanceSummary.totalWorkingDays) {
+            setCalculatedWorkingDays(
+              firstResult.attendanceSummary.totalWorkingDays
+            );
+          }
+        } else {
+          console.log("No attendance summary found in response");
+        }
+
+        // Check for success
+        await fetchSalaries();
+
+        // Reset form and close modal
+        setSelectedEmployees([]);
+        setShowModal(false);
+        setSuccessMessage(
+          `Successfully calculated salaries for ${
+            response.length
+          } employees for ${
+            months.find((m) => m.value === parseInt(calculationForm.month))
+              ?.label
+          } ${calculationForm.year}`
+        );
+      } else if (response.success) {
         // Refresh both the calculation month data and the currently displayed month data
         if (
           calculationForm.month === currentMonth &&
@@ -750,27 +835,45 @@ const Salary = () => {
                 </div>
 
                 <div>
-                  <Label className="mb-2">Working Days</Label>
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-2 mb-2">
-                    <p className="text-sm text-blue-700">
-                      Working days are automatically calculated based on
-                      Monday-Friday in the selected month
-                      {calculatedWorkingDays &&
-                        ` (${calculatedWorkingDays} days for this month)`}
-                    </p>
+                  <div className="flex align-items-center">
+                    <Label htmlFor="workingDays" className="mr-3">
+                      Working Days
+                    </Label>
+                    <Tag
+                      severity="info"
+                      value="Auto-calculated from attendance"
+                    ></Tag>
                   </div>
+                  <Input
+                    id="workingDays"
+                    type="number"
+                    name="workingDays"
+                    value={calculatedWorkingDays}
+                    onChange={handleInputChange}
+                    disabled
+                    tooltip="Working days will be automatically calculated from employee attendance records"
+                    tooltipOptions={{ position: "top" }}
+                  />
                 </div>
 
                 <div>
-                  <Label htmlFor="days-off" className="mb-2">
-                    Days Off
-                  </Label>
+                  <div className="flex align-items-center">
+                    <Label htmlFor="daysOff" className="mr-3">
+                      Days Off
+                    </Label>
+                    <Tag
+                      severity="info"
+                      value="Auto-calculated: ≥7h=full day, 4-7h=half day"
+                    ></Tag>
+                  </div>
                   <Input
-                    id="days-off"
+                    id="daysOff"
                     type="number"
                     name="daysOff"
                     value={calculationForm.daysOff}
                     onChange={handleInputChange}
+                    tooltip="Days off are calculated based on attendance records: days with ≥7 hours count as full days, 4-7 hours as half days, and the rest as days off"
+                    tooltipOptions={{ position: "top" }}
                   />
                 </div>
 

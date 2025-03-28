@@ -220,9 +220,7 @@ export const salaryService = {
   // Get salary records for a specific period
   getByPeriod: async (month, year) => {
     try {
-      const response = await api.get(
-        `/salary/period?month=${month}&year=${year}`
-      );
+      const response = await api.get(`/salary/${year}/${month}`);
       return response.data;
     } catch (error) {
       console.error(
@@ -236,15 +234,7 @@ export const salaryService = {
   // Calculate salary for one or more employees
   calculate: async (data) => {
     try {
-      const response = await api.post("/salary/calculate", {
-        employeeIds: data.employeeIds,
-        month: data.month,
-        year: data.year,
-        daysOff: data.daysOff || 0,
-        overtimesoon: data.overtimesoon || 0,
-        overtimelate: data.overtimelate || 0,
-        bonus: data.bonus || 0,
-      });
+      const response = await api.post("/salary/calculate", data);
       return response.data;
     } catch (error) {
       console.error("Error calculating salary:", error);
@@ -266,37 +256,34 @@ export const salaryService = {
   // Export salary calculations to Excel
   exportToExcel: async (month, year) => {
     try {
-      let url = `${API_URL}/salary/export/excel`;
-
-      // Add month and year as query parameters if provided
-      if (month && year) {
-        url += `?month=${month}&year=${year}`;
-      }
-
-      const response = await api.get(url, {
+      const response = await api.get(`/salary/export/${year}/${month}`, {
         responseType: "blob",
       });
 
-      // Create a URL for the blob
-      const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
 
-      // Create a link and trigger download
+      // Create a link element
       const link = document.createElement("a");
-      link.href = downloadUrl;
-      const filename =
-        month && year
-          ? `salary_calculations_${year}_${month}.xlsx`
-          : `salary_calculations_${
-              new Date().toISOString().split("T")[0]
-            }.xlsx`;
-      link.setAttribute("download", filename);
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `salary_report_${year}_${month}.xlsx`
+      );
+
+      // Append the link to the body
       document.body.appendChild(link);
+
+      // Programmatically click the link to trigger the download
       link.click();
-      link.remove();
+
+      // Clean up by removing the link and revoking the URL
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       return true;
     } catch (error) {
-      console.error("Error exporting to Excel:", error);
+      console.error("Error exporting salary data to Excel:", error);
       throw error;
     }
   },
@@ -304,13 +291,15 @@ export const salaryService = {
   // Export payslip as PDF
   exportPayslip: async (salaryId) => {
     try {
-      const response = await api.get(`/salary/${salaryId}/payslip`, {
+      const response = await api.get(`/salary/payslip/${salaryId}`, {
         responseType: "blob",
-        headers: {
-          Accept: "application/pdf",
-        },
       });
-      return response;
+      
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      window.open(url, "_blank");
+      
+      return true;
     } catch (error) {
       console.error("Error exporting payslip:", error);
       throw error;
@@ -318,8 +307,191 @@ export const salaryService = {
   },
 };
 
+// Attendance API services
+export const attendanceService = {
+  // Check in
+  checkIn: async (notes = "") => {
+    try {
+      const response = await api.post("/attendance/check-in", { notes });
+      return response.data;
+    } catch (error) {
+      console.error("Error checking in:", error);
+      throw error;
+    }
+  },
+
+  // Check out
+  checkOut: async (notes = "") => {
+    try {
+      const response = await api.post("/attendance/check-out", { notes });
+      return response.data;
+    } catch (error) {
+      console.error("Error checking out:", error);
+      throw error;
+    }
+  },
+
+  // Get today's attendance status
+  getStatus: async () => {
+    try {
+      const response = await api.get("/attendance/status");
+      return response.data;
+    } catch (error) {
+      console.error("Error getting attendance status:", error);
+      throw error;
+    }
+  },
+
+  // Get attendance history
+  getHistory: async (page = 1, limit = 10) => {
+    try {
+      const response = await api.get(`/attendance/history?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting attendance history:", error);
+      throw error;
+    }
+  },
+
+  // Admin: Get employee attendance
+  getEmployeeAttendance: async (employeeId, startDate, endDate) => {
+    try {
+      let url = `/attendance/employee/${employeeId}`;
+      
+      if (startDate && endDate) {
+        url += `?startDate=${startDate}&endDate=${endDate}`;
+      }
+      
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting employee attendance:", error);
+      throw error;
+    }
+  },
+
+  // Admin: Get attendance summary
+  getSummary: async (params) => {
+    try {
+      let queryParams = new URLSearchParams();
+      
+      if (params.month && params.year) {
+        queryParams.append("month", params.month);
+        queryParams.append("year", params.year);
+      } else if (params.startDate && params.endDate) {
+        queryParams.append("startDate", params.startDate);
+        queryParams.append("endDate", params.endDate);
+      }
+      
+      const response = await api.get(`/attendance/summary?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting attendance summary:", error);
+      throw error;
+    }
+  }
+};
+
+// User API services
+export const userService = {
+  // Get all users
+  getAll: async () => {
+    try {
+      const response = await api.get("/auth/users");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      throw error;
+    }
+  },
+
+  // Get user by ID
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/auth/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching user with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Create new user
+  create: async (userData) => {
+    try {
+      const response = await api.post("/auth/users", userData);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
+  },
+
+  // Create user from employee
+  createFromEmployee: async (employeeId, role) => {
+    try {
+      const response = await api.post("/auth/users/create-from-employee", {
+        employeeId,
+        role,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error creating user from employee:", error);
+      throw error;
+    }
+  },
+
+  // Update existing user
+  update: async (id, userData) => {
+    try {
+      const response = await api.put(`/auth/users/${id}`, userData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating user with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Delete user
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/auth/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting user with ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Reset user password
+  resetPassword: async (id) => {
+    try {
+      const response = await api.post(`/auth/users/${id}/reset-password`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error resetting password for user with ID ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  // Change own password
+  changePassword: async (currentPassword, newPassword) => {
+    try {
+      const response = await api.post("/auth/change-password", {
+        currentPassword,
+        newPassword
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  }
+};
+
 // Helper functions for formatting currency
 export const formatVND = (amount) => {
+  if (amount === undefined || amount === null) return "";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
@@ -328,9 +500,39 @@ export const formatVND = (amount) => {
 
 export const parseVNDToNumber = (formattedAmount) => {
   if (!formattedAmount) return 0;
-  // Remove currency symbol, spaces and commas
-  const cleaned = formattedAmount.replace(/[^\d]/g, "");
-  return parseInt(cleaned, 10) || 0;
+  return parseInt(formattedAmount.replace(/[^\d]/g, ""));
+};
+
+// Helper functions for date formatting
+export const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+};
+
+export const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+export const formatTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit", 
+    minute: "2-digit"
+  });
 };
 
 export default api;

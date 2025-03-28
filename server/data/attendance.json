@@ -1,0 +1,382 @@
+[
+  {
+    "id": "14ca501a-6d6d-4d00-8011-5a10e78073b8",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-27T05:10:00.000Z",
+    "checkIn": {
+      "time": "2025-03-27T05:10:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-27T14:15:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9.08,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-27T05:10:00.000Z",
+    "updatedAt": "2025-03-27T14:15:00.000Z"
+  },
+  {
+    "id": "24ca501a-6d6d-4d00-8011-5a10e78073c9",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-26T05:05:00.000Z",
+    "checkIn": {
+      "time": "2025-03-26T05:05:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-26T14:10:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9.08,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-26T05:05:00.000Z",
+    "updatedAt": "2025-03-26T14:10:00.000Z"
+  },
+  {
+    "id": "34ca501a-6d6d-4d00-8011-5a10e78073d0",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-25T05:15:00.000Z",
+    "checkIn": {
+      "time": "2025-03-25T05:15:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-25T10:30:00.000Z",
+      "notes": "Left early for doctor's appointment"
+    },
+    "workingHours": 5.25,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-25T05:15:00.000Z",
+    "updatedAt": "2025-03-25T10:30:00.000Z"
+  },
+  {
+    "id": "44ca501a-6d6d-4d00-8011-5a10e78073e1",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-24T05:10:00.000Z",
+    "checkIn": {
+      "time": "2025-03-24T05:10:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-24T13:10:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 8,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-24T05:10:00.000Z",
+    "updatedAt": "2025-03-24T13:10:00.000Z"
+  },
+  {
+    "id": "54ca501a-6d6d-4d00-8011-5a10e78073f2",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-21T05:30:00.000Z",
+    "checkIn": {
+      "time": "2025-03-21T05:30:00.000Z",
+      "notes": "Late arrival due to traffic"
+    },
+    "checkOut": {
+      "time": "2025-03-21T14:30:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-21T05:30:00.000Z",
+    "updatedAt": "2025-03-21T14:30:00.000Z"
+  },
+  {
+    "id": "64ca501a-6d6d-4d00-8011-5a10e78073g3",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-20T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-20T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-20T14:00:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-20T05:00:00.000Z",
+    "updatedAt": "2025-03-20T14:00:00.000Z"
+  },
+  {
+    "id": "74ca501a-6d6d-4d00-8011-5a10e78073h4",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-19T05:05:00.000Z",
+    "checkIn": {
+      "time": "2025-03-19T05:05:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-19T14:05:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-19T05:05:00.000Z",
+    "updatedAt": "2025-03-19T14:05:00.000Z"
+  },
+  {
+    "id": "84ca501a-6d6d-4d00-8011-5a10e78073i5",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-18T05:05:00.000Z",
+    "checkIn": {
+      "time": "2025-03-18T05:05:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-18T14:05:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-18T05:05:00.000Z",
+    "updatedAt": "2025-03-18T14:05:00.000Z"
+  },
+  {
+    "id": "94ca501a-6d6d-4d00-8011-5a10e78073j6",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-17T05:10:00.000Z",
+    "checkIn": {
+      "time": "2025-03-17T05:10:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-17T14:10:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-17T05:10:00.000Z",
+    "updatedAt": "2025-03-17T14:10:00.000Z"
+  },
+  {
+    "id": "a4ca501a-6d6d-4d00-8011-5a10e78073k7",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-14T05:05:00.000Z",
+    "checkIn": {
+      "time": "2025-03-14T05:05:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-14T17:05:00.000Z",
+      "notes": "Worked overtime"
+    },
+    "workingHours": 12,
+    "status": "present",
+    "overtime": 3,
+    "isApproved": true,
+    "createdAt": "2025-03-14T05:05:00.000Z",
+    "updatedAt": "2025-03-14T17:05:00.000Z"
+  },
+  {
+    "id": "b4ca501a-6d6d-4d00-8011-5a10e78073l8",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-13T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-13T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-13T16:00:00.000Z",
+      "notes": "Worked overtime"
+    },
+    "workingHours": 11,
+    "status": "present",
+    "overtime": 2,
+    "isApproved": true,
+    "createdAt": "2025-03-13T05:00:00.000Z",
+    "updatedAt": "2025-03-13T16:00:00.000Z"
+  },
+  {
+    "id": "c4ca501a-6d6d-4d00-8011-5a10e78073m9",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-12T05:05:00.000Z",
+    "checkIn": {
+      "time": "2025-03-12T05:05:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-12T14:05:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-12T05:05:00.000Z",
+    "updatedAt": "2025-03-12T14:05:00.000Z"
+  },
+  {
+    "id": "d4ca501a-6d6d-4d00-8011-5a10e78073n0",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-11T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-11T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-11T14:00:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-11T05:00:00.000Z",
+    "updatedAt": "2025-03-11T14:00:00.000Z"
+  },
+  {
+    "id": "e4ca501a-6d6d-4d00-8011-5a10e78073o1",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-10T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-10T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-10T14:00:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-10T05:00:00.000Z",
+    "updatedAt": "2025-03-10T14:00:00.000Z"
+  },
+  {
+    "id": "f4ca501a-6d6d-4d00-8011-5a10e78073p2",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-07T05:05:00.000Z",
+    "checkIn": {
+      "time": "2025-03-07T05:05:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-07T14:05:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-07T05:05:00.000Z",
+    "updatedAt": "2025-03-07T14:05:00.000Z"
+  },
+  {
+    "id": "g4ca501a-6d6d-4d00-8011-5a10e78073q3",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-06T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-06T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-06T09:00:00.000Z",
+      "notes": "Left early for personal reasons"
+    },
+    "workingHours": 4,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-06T05:00:00.000Z",
+    "updatedAt": "2025-03-06T09:00:00.000Z"
+  },
+  {
+    "id": "h4ca501a-6d6d-4d00-8011-5a10e78073r4",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-05T05:10:00.000Z",
+    "checkIn": {
+      "time": "2025-03-05T05:10:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-05T14:10:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-05T05:10:00.000Z",
+    "updatedAt": "2025-03-05T14:10:00.000Z"
+  },
+  {
+    "id": "i4ca501a-6d6d-4d00-8011-5a10e78073s5",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-04T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-04T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-04T14:00:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-04T05:00:00.000Z",
+    "updatedAt": "2025-03-04T14:00:00.000Z"
+  },
+  {
+    "id": "j4ca501a-6d6d-4d00-8011-5a10e78073t6",
+    "employeeId": 1,
+    "userId": 2,
+    "date": "2025-03-03T05:00:00.000Z",
+    "checkIn": {
+      "time": "2025-03-03T05:00:00.000Z",
+      "notes": ""
+    },
+    "checkOut": {
+      "time": "2025-03-03T14:00:00.000Z",
+      "notes": ""
+    },
+    "workingHours": 9,
+    "status": "present",
+    "overtime": 0,
+    "isApproved": true,
+    "createdAt": "2025-03-03T05:00:00.000Z",
+    "updatedAt": "2025-03-03T14:00:00.000Z"
+  }
+]

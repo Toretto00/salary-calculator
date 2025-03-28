@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "id": 1,
+    "employeeId": 1,
+    "month": 3,
+    "year": 2025,
+    "attendanceSummary": {
+      "workDays": 19,
+      "halfDays": 2,
+      "fullDays": 18,
+      "absences": 2,
+      "totalWorkingDays": 21
+    },
+    "createdAt": "2025-03-28T08:20:38.727Z",
+    "fullname": "Trương Minh Thảo",
+    "grossSalary": 20000000,
+    "workDays": 19,
+    "adjustedSalary": 18095238.095238097,
+    "otTimeSoon": 0,
+    "otTimeLate": 0,
+    "moneyOfOtTimeSoon": 0,
+    "moneyOfOtTimeLate": 0,
+    "totalOvertime": 0,
+    "food": 2000000,
+    "clothes": 0,
+    "parking": 0,
+    "fuel": 0,
+    "houseRent": 0,
+    "phone": 0,
+    "bonus": 0,
+    "totalBenefits": 2000000,
+    "healthInsurance": 300000,
+    "socialInsurance": 1600000,
+    "accidentInsurance": 200000,
+    "totalInsurance": 2100000,
+    "taxableIncome": 1865238.095238097,
+    "totalTax": 93261.90476190485,
+    "netSalary": 17901976.190476194,
+    "isProbation": false,
+    "isVietnamese": true,
+    "calculatedAt": "2025-03-28T08:20:38.727Z"
+  }
+]

@@ -69,11 +69,6 @@ npm start
 
 3. Open your browser and navigate to http://localhost:3000
 
-### Default Login Credentials
-
-- Username: admin
-- Password: admin123
-
 ## Project Structure
 
 ```

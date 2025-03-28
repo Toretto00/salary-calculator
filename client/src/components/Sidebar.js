@@ -12,6 +12,10 @@ import {
   Calculator,
   BarChart,
   X,
+  UserCog,
+  KeyRound,
+  Clock,
+  UserRound,
 } from "lucide-react";
 
 const Sidebar = ({
@@ -20,7 +24,7 @@ const Sidebar = ({
   mobile = false,
   onClose,
 }) => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,29 +36,56 @@ const Sidebar = ({
     }
   };
 
-  // Navigation items
-  const navItems = [
-    {
-      name: "Dashboard",
-      path: "/dashboard",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-    },
-    {
-      name: "Employees",
-      path: "/employees",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      name: "Salary",
-      path: "/salary",
-      icon: <Calculator className="h-5 w-5" />,
-    },
-    {
-      name: "Reports",
-      path: "/reports",
-      icon: <BarChart className="h-5 w-5" />,
-    },
-  ];
+  // Navigation items - common for all roles
+  const navItems = [];
+
+  // Add navigation based on user role
+  if (user) {
+    if (user.role === "admin") {
+      // Admin items
+      navItems.push(
+        {
+          name: "Dashboard",
+          path: "/dashboard",
+          icon: <LayoutDashboard className="h-5 w-5" />,
+        },
+        {
+          name: "Employees",
+          path: "/employees",
+          icon: <Users className="h-5 w-5" />,
+        },
+        {
+          name: "Salary",
+          path: "/salary",
+          icon: <Calculator className="h-5 w-5" />,
+        },
+        {
+          name: "Reports",
+          path: "/reports",
+          icon: <BarChart className="h-5 w-5" />,
+        },
+        {
+          name: "User Management",
+          path: "/users",
+          icon: <UserCog className="h-5 w-5" />,
+        }
+      );
+    } else {
+      // Regular user items
+      navItems.push(
+        {
+          name: "Attendance",
+          path: "/attendance",
+          icon: <Clock className="h-5 w-5" />,
+        },
+        {
+          name: "Profile",
+          path: "/profile",
+          icon: <UserRound className="h-5 w-5" />,
+        }
+      );
+    }
+  }
 
   // Check if a link is active
   const isActive = (path) => {
@@ -137,17 +168,32 @@ const Sidebar = ({
           </div>
         )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogout}
-          className={`w-full flex items-center ${
-            collapsed && !mobile ? "justify-center px-0" : ""
-          }`}
-        >
-          <LogOut className="h-4 w-4" />
-          {(!collapsed || mobile) && <span className="ml-2">Logout</span>}
-        </Button>
+        <div className="space-y-2">
+          <Link
+            to="/change-password"
+            className={`flex items-center text-sm px-3 py-2 rounded-md transition-colors text-muted-foreground hover:bg-accent hover:text-foreground ${
+              collapsed && !mobile ? "justify-center" : ""
+            }`}
+            onClick={mobile && onClose ? onClose : undefined}
+          >
+            <KeyRound className="h-4 w-4" />
+            {(!collapsed || mobile) && (
+              <span className="ml-2">Change Password</span>
+            )}
+          </Link>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className={`w-full flex items-center ${
+              collapsed && !mobile ? "justify-center px-0" : ""
+            }`}
+          >
+            <LogOut className="h-4 w-4" />
+            {(!collapsed || mobile) && <span className="ml-2">Logout</span>}
+          </Button>
+        </div>
       </div>
     </div>
   );

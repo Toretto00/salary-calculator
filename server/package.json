@@ -21,7 +21,8 @@
     "express-session": "^1.18.1",
     "jsonwebtoken": "^8.5.1",
     "pdf-lib": "^1.17.1",
-    "pizzip": "^3.1.8"
+    "pizzip": "^3.1.8",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

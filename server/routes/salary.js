@@ -6,6 +6,7 @@ const ExcelJS = require("exceljs");
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 const { PDFDocument } = require("pdf-lib");
+const { getAttendanceSummary } = require("../utils/attendanceAnalyzer");
 
 const router = express.Router();
 const salaryCalculationsFile = path.join(
@@ -291,14 +292,190 @@ router.get("/period", isAuthenticated, (req, res) => {
   }
 });
 
-// Get salary calculation by ID
+// Export routes must come before dynamic parameter routes
+router.get("/export/excel", isAuthenticated, async (req, res) => {
+  try {
+    // Get query parameters for filtering
+    const { month, year } = req.query;
+
+    // Get salary calculations
+    let calculations = [];
+    if (fs.existsSync(salaryCalculationsFile)) {
+      calculations = JSON.parse(
+        fs.readFileSync(salaryCalculationsFile, "utf8")
+      );
+    }
+
+    // Filter by month and year if provided
+    if (month && year) {
+      calculations = calculations.filter(
+        (calc) => calc.month === parseInt(month) && calc.year === parseInt(year)
+      );
+    }
+
+    if (calculations.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No salary calculations found for export" });
+    }
+
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Salary Calculations");
+
+    // Define columns
+    worksheet.columns = [
+      { header: "Full Name", key: "fullname", width: 20 },
+      { header: "Gross Salary", key: "grossSalary", width: 15 },
+      { header: "Working Days", key: "workDays", width: 15 },
+      { header: "Adjusted Salary", key: "adjustedSalary", width: 15 },
+      { header: "Food", key: "food", width: 15 },
+      { header: "Clothes", key: "clothes", width: 15 },
+      { header: "Parking", key: "parking", width: 15 },
+      { header: "Fuel", key: "fuel", width: 15 },
+      { header: "House Rent", key: "houseRent", width: 15 },
+      { header: "Phone", key: "phone", width: 15 },
+      { header: "Total Benefits", key: "totalBenefits", width: 15 },
+      { header: "Health Insurance", key: "healthInsurance", width: 15 },
+      { header: "Social Insurance", key: "socialInsurance", width: 15 },
+      { header: "Unemployment Insurance", key: "accidentInsurance", width: 15 },
+      { header: "Total Insurance", key: "totalInsurance", width: 15 },
+      { header: "Income Tax", key: "incomeTax", width: 15 },
+      { header: "Total Tax", key: "totalTax", width: 15 },
+      { header: "Total Overtime", key: "totalOvertime", width: 15 },
+      { header: "Net Salary", key: "netSalary", width: 15 },
+    ];
+
+    // Add data
+    calculations.forEach((calculation) => {
+      worksheet.addRow({
+        fullname: calculation.fullname,
+        grossSalary: calculation.grossSalary,
+        workDays: calculation.workDays,
+        adjustedSalary: calculation.adjustedSalary,
+        food: calculation.food,
+        clothes: calculation.clothes,
+        parking: calculation.parking,
+        fuel: calculation.fuel,
+        houseRent: calculation.houseRent,
+        phone: calculation.phone,
+        totalBenefits: calculation.totalBenefits,
+        totalTax: calculation.totalTax,
+        totalInsurance: calculation.totalInsurance,
+        totalOvertime: calculation.totalOvertime,
+        healthInsurance: calculation.healthInsurance,
+        socialInsurance: calculation.socialInsurance,
+        accidentInsurance: calculation.accidentInsurance,
+        netSalary: calculation.netSalary,
+        incomeTax:
+          calculation.taxableIncome < 0 ? 0 : calculation.taxableIncome,
+      });
+    });
+
+    // Format currency columns
+    [
+      "grossSalary",
+      "netSalary",
+      "totalBenefits",
+      "totalTax",
+      "totalInsurance",
+      "totalOvertime",
+      "adjustedSalary",
+      "food",
+      "clothes",
+      "parking",
+      "fuel",
+      "houseRent",
+      "phone",
+      "healthInsurance",
+      "socialInsurance",
+      "accidentInsurance",
+      "incomeTax",
+    ].forEach((key) => {
+      worksheet.getColumn(key).numFmt = '#,##0 "₫"';
+    });
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD3D3D3" },
+    };
+
+    // Generate Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=salary_calculations_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`
+    );
+
+    res.send(buffer);
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+    res.status(500).json({ message: "Error exporting to Excel" });
+  }
+});
+
+// Get salary calculations by year and month (path params)
+// This must be BEFORE the /:id route to avoid conflicts
+router.get("/:year/:month", isAuthenticated, (req, res) => {
+  try {
+    const { month, year } = req.params;
+
+    if (!month || !year) {
+      return res.status(400).json({
+        message: "Month and year parameters are required",
+      });
+    }
+
+    const monthNum = parseInt(month);
+    const yearNum = parseInt(year);
+
+    // Make sure we're working with valid numbers
+    if (isNaN(monthNum) || isNaN(yearNum)) {
+      return res.status(400).json({
+        message: "Month and year must be valid numbers",
+      });
+    }
+
+    const calculations = JSON.parse(
+      fs.readFileSync(salaryCalculationsFile, "utf8")
+    );
+
+    const filteredCalculations = calculations.filter(
+      (calc) => calc.month === monthNum && calc.year === yearNum
+    );
+
+    res.json(filteredCalculations);
+  } catch (error) {
+    console.error("Error getting salary calculations by period:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get salary calculation by ID (now comes AFTER the year/month route)
 router.get("/:id", isAuthenticated, (req, res) => {
   try {
+    // Check if the ID is a number to avoid confusing with other routes
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+    
     const calculations = JSON.parse(
       fs.readFileSync(salaryCalculationsFile, "utf8")
     );
     const calculation = calculations.find(
-      (calc) => calc.id === parseInt(req.params.id)
+      (calc) => calc.id === id
     );
 
     if (!calculation) {
@@ -464,138 +641,6 @@ router.delete("/:id", isAuthenticated, (req, res) => {
   }
 });
 
-// Export salary calculations to Excel
-router.get("/export/excel", isAuthenticated, async (req, res) => {
-  try {
-    // Get query parameters for filtering
-    const { month, year } = req.query;
-
-    // Get salary calculations
-    let calculations = [];
-    if (fs.existsSync(salaryCalculationsFile)) {
-      calculations = JSON.parse(
-        fs.readFileSync(salaryCalculationsFile, "utf8")
-      );
-    }
-
-    // Filter by month and year if provided
-    if (month && year) {
-      calculations = calculations.filter(
-        (calc) => calc.month === parseInt(month) && calc.year === parseInt(year)
-      );
-    }
-
-    if (calculations.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No salary calculations found for export" });
-    }
-
-    // Create Excel workbook
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Salary Calculations");
-
-    // Define columns
-    worksheet.columns = [
-      { header: "Full Name", key: "fullname", width: 20 },
-      { header: "Gross Salary", key: "grossSalary", width: 15 },
-      { header: "Working Days", key: "workDays", width: 15 },
-      { header: "Adjusted Salary", key: "adjustedSalary", width: 15 },
-      { header: "Food", key: "food", width: 15 },
-      { header: "Clothes", key: "clothes", width: 15 },
-      { header: "Parking", key: "parking", width: 15 },
-      { header: "Fuel", key: "fuel", width: 15 },
-      { header: "House Rent", key: "houseRent", width: 15 },
-      { header: "Phone", key: "phone", width: 15 },
-      { header: "Total Benefits", key: "totalBenefits", width: 15 },
-      { header: "Health Insurance", key: "healthInsurance", width: 15 },
-      { header: "Social Insurance", key: "socialInsurance", width: 15 },
-      { header: "Unemployment Insurance", key: "accidentInsurance", width: 15 },
-      { header: "Total Insurance", key: "totalInsurance", width: 15 },
-      { header: "Income Tax", key: "incomeTax", width: 15 },
-      { header: "Total Tax", key: "totalTax", width: 15 },
-      { header: "Total Overtime", key: "totalOvertime", width: 15 },
-      { header: "Net Salary", key: "netSalary", width: 15 },
-    ];
-
-    // Add data
-    calculations.forEach((calculation) => {
-      worksheet.addRow({
-        fullname: calculation.fullname,
-        grossSalary: calculation.grossSalary,
-        workDays: calculation.workDays,
-        adjustedSalary: calculation.adjustedSalary,
-        food: calculation.food,
-        clothes: calculation.clothes,
-        parking: calculation.parking,
-        fuel: calculation.fuel,
-        houseRent: calculation.houseRent,
-        phone: calculation.phone,
-        totalBenefits: calculation.totalBenefits,
-        totalTax: calculation.totalTax,
-        totalInsurance: calculation.totalInsurance,
-        totalOvertime: calculation.totalOvertime,
-        healthInsurance: calculation.healthInsurance,
-        socialInsurance: calculation.socialInsurance,
-        accidentInsurance: calculation.accidentInsurance,
-        netSalary: calculation.netSalary,
-        incomeTax:
-          calculation.taxableIncome < 0 ? 0 : calculation.taxableIncome,
-      });
-    });
-
-    // Format currency columns
-    [
-      "grossSalary",
-      "netSalary",
-      "totalBenefits",
-      "totalTax",
-      "totalInsurance",
-      "totalOvertime",
-      "adjustedSalary",
-      "food",
-      "clothes",
-      "parking",
-      "fuel",
-      "houseRent",
-      "phone",
-      "healthInsurance",
-      "socialInsurance",
-      "accidentInsurance",
-      "incomeTax",
-    ].forEach((key) => {
-      worksheet.getColumn(key).numFmt = '#,##0 "₫"';
-    });
-
-    // Style header row
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFD3D3D3" },
-    };
-
-    // Generate Excel file
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=salary_calculations_${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`
-    );
-
-    res.send(buffer);
-  } catch (error) {
-    console.error("Error exporting to Excel:", error);
-    res.status(500).json({ message: "Error exporting to Excel" });
-  }
-});
-
 // Calculate and create new salary records (batch processing)
 router.post("/calculate", isAuthenticated, (req, res) => {
   try {
@@ -603,126 +648,128 @@ router.post("/calculate", isAuthenticated, (req, res) => {
       employeeIds,
       month,
       year,
-      daysOff,
-      overtimesoon,
-      overtimelate,
-      bonus,
+      workingDays = 0,
+      daysOff = 0,
+      otTimeSoon = 0,
+      otTimeLate = 0,
+      bonus = 0,
     } = req.body;
 
-    // Basic validation
-    if (!employeeIds || !month || !year) {
+    if (!employeeIds || !Array.isArray(employeeIds) || employeeIds.length === 0) {
       return res.status(400).json({
-        message: "Missing required fields: employeeIds, month, year",
+        message: "Employee IDs are required",
       });
     }
 
-    // Convert month and year to integers for consistency
-    const monthInt = parseInt(month);
-    const yearInt = parseInt(year);
-
-    // Auto-calculate working days for the month
-    const workingDays = getWorkingDaysInMonth(monthInt, yearInt);
-
-    // Get employees data
-    let employees = [];
-    if (fs.existsSync(employeesFile)) {
-      employees = JSON.parse(fs.readFileSync(employeesFile, "utf8"));
+    if (!month || !year) {
+      return res.status(400).json({
+        message: "Month and year are required",
+      });
     }
 
-    // Get existing salary calculations
+    // Get employees
+    const employees = JSON.parse(fs.readFileSync(employeesFile, "utf8"));
+    
+    // Get attendance summary for all employees
+    const attendanceSummary = getAttendanceSummary(
+      employeeIds.map(id => parseInt(id)), 
+      parseInt(month), 
+      parseInt(year)
+    );
+
+    // Get or create salary calculations array
     let calculations = [];
     if (fs.existsSync(salaryCalculationsFile)) {
-      calculations = JSON.parse(
-        fs.readFileSync(salaryCalculationsFile, "utf8")
-      );
+      calculations = JSON.parse(fs.readFileSync(salaryCalculationsFile, "utf8"));
     }
 
     const results = [];
-    const errors = [];
 
-    // Process each employee
-    employeeIds.forEach((employeeId) => {
-      try {
-        // Find employee
-        const employee = employees.find(
-          (emp) => emp.id === parseInt(employeeId)
-        );
-        if (!employee) {
-          errors.push({ employeeId, message: "Employee not found" });
-          return;
-        }
-
-        // Check if salary record already exists for this month/year
-        const existingRecord = calculations.find(
-          (calc) =>
-            calc.employeeId === employee.id &&
-            calc.month === monthInt &&
-            calc.year === yearInt
-        );
-
-        if (existingRecord) {
-          errors.push({
-            employeeId,
-            message: "Salary calculation already exists for this month/year",
-            recordId: existingRecord.id,
-          });
-          return;
-        }
-
-        // Combine employee data with salary calculation data
-        const calculationData = {
-          fullname: employee.fullname,
-          salary: employee.salary || 0,
-          dependents: employee.dependents || 0,
-          allowances: employee.allowances || {},
-          probation: employee.probation || "no",
-          nationality: employee.nationality || "vietnamese",
-          workingDays,
-          daysOff: daysOff || 0,
-          otTimeSoon: overtimesoon || 0,
-          otTimeLate: overtimelate || 0,
-          bonus: bonus || 0,
-        };
-
-        // Calculate salary
-        const result = calculateSalary(calculationData);
-
-        // Create new calculation record
-        const newCalculation = {
-          id:
-            calculations.length > 0
-              ? Math.max(...calculations.map((c) => c.id)) + 1
-              : 1,
-          employeeId: employee.id,
-          month: monthInt,
-          year: yearInt,
-          ...result,
-        };
-
-        // Add to results and calculations
-        results.push(newCalculation);
-        calculations.push(newCalculation);
-      } catch (error) {
-        errors.push({ employeeId, message: error.message });
+    // Calculate salary for each employee
+    for (const employeeId of employeeIds) {
+      const employee = employees.find((emp) => emp.id === parseInt(employeeId));
+      if (!employee) {
+        results.push({
+          employeeId,
+          error: "Employee not found",
+        });
+        continue;
       }
-    });
 
-    // Save all calculations
+      // Check if salary already exists for this employee and period
+      const existingIndex = calculations.findIndex(
+        (calc) =>
+          calc.employeeId === parseInt(employeeId) &&
+          calc.month === parseInt(month) &&
+          calc.year === parseInt(year)
+      );
+
+      // Get attendance data for this employee
+      const attendance = attendanceSummary[employeeId] || {
+        workDays: workingDays,
+        absences: daysOff,
+        totalWorkingDays: workingDays + daysOff
+      };
+
+      // Prepare calculation data
+      const calculationData = {
+        employeeId: parseInt(employeeId),
+        month: parseInt(month),
+        year: parseInt(year),
+        workingDays: attendance.totalWorkingDays,
+        daysOff: attendance.absences,
+        otTimeSoon,
+        otTimeLate,
+        bonus,
+        // Include employee data
+        fullname: employee.fullname,
+        salary: employee.salary,
+        dependents: employee.dependents || 0,
+        probation: employee.probation || "no",
+        nationality: employee.nationality || "vietnamese",
+        // Include allowances
+        allowances: employee.allowances || {},
+      };
+
+      // Calculate salary
+      const result = calculateSalary(calculationData);
+
+      // Add metadata
+      const calculation = {
+        id:
+          existingIndex >= 0
+            ? calculations[existingIndex].id
+            : calculations.length > 0
+            ? Math.max(...calculations.map((c) => c.id)) + 1
+            : 1,
+        employeeId: parseInt(employeeId),
+        month: parseInt(month),
+        year: parseInt(year),
+        attendanceSummary: attendance,
+        createdAt: new Date().toISOString(),
+        ...result,
+      };
+
+      // Add or update calculation
+      if (existingIndex >= 0) {
+        calculations[existingIndex] = calculation;
+      } else {
+        calculations.push(calculation);
+      }
+
+      results.push(calculation);
+    }
+
+    // Save calculations
     fs.writeFileSync(
       salaryCalculationsFile,
       JSON.stringify(calculations, null, 2)
     );
 
-    res.status(201).json({
-      success: results.length > 0,
-      message: `Successfully calculated ${results.length} salary records for ${monthInt}/${yearInt} with ${workingDays} working days`,
-      results,
-      errors: errors.length > 0 ? errors : undefined,
-      workingDays,
-    });
+    res.status(200).json(results);
   } catch (error) {
-    console.error("Error calculating salaries:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error calculating salary:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

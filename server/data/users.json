@@ -4,5 +4,15 @@
     "username": "admin",
     "password": "$2b$10$VKZ1CDg8c7zraJLQoLORbuyEQ6wZeHGJ.S7DvVZZzho6EpuuXkbwK",
     "role": "admin"
+  },
+  {
+    "id": 2,
+    "username": "truongminhthao132@gmail.com",
+    "password": "$2b$10$B4NndzsUkIvy3HlRW/mVk.RTensPSBLhHHSYShP/9uSorMPOjq6QC",
+    "name": "Trương Minh Thảo",
+    "role": "user",
+    "employeeId": 1,
+    "createdAt": "2025-03-28T04:18:53.351Z",
+    "updatedAt": "2025-03-28T04:19:31.342Z"
   }
 ]
